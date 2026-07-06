@@ -1,0 +1,8 @@
+{
+  "code": "DISPUTE_AMOUNT_EXCEEDS_AUTO_THRESHOLD",
+  "message": "Сумма оспаривания превышает порог автоматического решения (3000 RUB). Диспут будет обработан вручную.",
+  "details": {
+    "requestedAmount": 5000.00,
+    "threshold": 3000.00
+  }
+}

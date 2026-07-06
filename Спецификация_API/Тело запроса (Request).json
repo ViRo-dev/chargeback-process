@@ -1,0 +1,7 @@
+{
+  "transactionId": "txn_1234567890abcdef",
+  "reason": "FRAUD",
+  "amount": 2500.00,
+  "currency": "RUB",
+  "description": "Товар не получен, продавец не отвечает"
+}

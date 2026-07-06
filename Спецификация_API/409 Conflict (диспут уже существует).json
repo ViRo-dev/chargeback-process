@@ -1,0 +1,7 @@
+{
+  "code": "DISPUTE_ALREADY_EXISTS",
+  "message": "Диспут для этой транзакции уже создан.",
+  "details": {
+    "existingDisputeId": "disp_1112223334445556"
+  }
+}

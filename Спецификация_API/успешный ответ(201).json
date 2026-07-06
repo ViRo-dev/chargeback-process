@@ -1,0 +1,12 @@
+{
+  "disputeId": "disp_9876543210fedcba",
+  "status": "OPEN",
+  "transactionId": "txn_1234567890abcdef",
+  "requestedAmount": 2500.00,
+  "currency": "RUB",
+  "reason": "FRAUD",
+  "createdAt": "2026-06-27T10:30:00Z",
+  "deadlineForResponse": "2026-08-11T10:30:00Z",
+  "autoDecisionThreshold": 3000.00,
+  "isAutoDecisionCandidate": true
+}

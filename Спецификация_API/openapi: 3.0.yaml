@@ -1,0 +1,148 @@
+openapi: 3.0.3
+info:
+  title: Chargeback Dispute API
+  version: 1.0.0
+  description: |
+    API для инициации процесса урегулирования спорной транзакции (chargeback).
+    
+    Бизнес-правила:
+    - Авторешение в пользу клиента при сумме < 3000 ₽
+    - Окно оспаривания — не более 120 дней с даты транзакции
+    - Срок на ответ — 45 дней (используется для Event-based шлюза)
+    - Участвуют 4 стороны: клиент, банк-эмитент, платёжная система, мерчант
+paths:
+  /api/v1/disputes:
+    post:
+      summary: Создать диспут (chargeback)
+      description: Инициирует процесс оспаривания транзакции. Применяются автоматические правила и проверки сроков.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeCreateRequest'
+      responses:
+        '201':
+          description: Диспут успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisputeResponse'
+        '409':
+          description: Диспут по этой транзакции уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictErrorResponse'
+        '422':
+          description: Ошибка валидации или бизнес-ограничение (лимиты, сроки)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+components:
+  schemas:
+    DisputeCreateRequest:
+      type: object
+      required:
+        - transactionId
+        - reason
+        - amount
+      properties:
+        transactionId:
+          type: string
+          description: Идентификатор транзакции в платёжной системе/банке
+          example: "txn_1234567890abcdef"
+        reason:
+          type: string
+          enum: [FRAUD, GOODS_NOT_RECEIVED, DUPLICATE]
+          description: Причина оспаривания
+        amount:
+          type: number
+          format: double
+          description: Сумма оспаривания в валюте
+          example: 2500.00
+        currency:
+          type: string
+          default: RUB
+          description: Валюта (ISO 4217)
+          example: RUB
+        description:
+          type: string
+          maxLength: 500
+          description: Дополнительные сведения от клиента
+          example: "Товар не получен, продавец не отвечает"
+
+    DisputeResponse:
+      type: object
+      properties:
+        disputeId:
+          type: string
+          example: "disp_9876543210fedcba"
+        transactionId:
+          type: string
+          example: "txn_1234567890abcdef"
+        status:
+          type: string
+          enum: [PENDING, AUTO_APPROVED, IN_REVIEW, CLOSED]
+          example: AUTO_APPROVED
+        amount:
+          type: number
+          format: double
+          example: 2500.00
+        currency:
+          type: string
+          example: RUB
+        reason:
+          type: string
+          enum: [FRAUD, GOODS_NOT_RECEIVED, DUPLICATE]
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-27T12:34:56Z"
+        deadlineForResponse:
+          type: string
+          format: date-time
+          example: "2026-08-11T12:34:56Z"
+          description: Дедлайн 45 дней для ответа (для Event-based шлюза)
+        autoDecisionApplied:
+          type: boolean
+          example: true
+          description: Применено ли автоматическое решение
+        decisionReason:
+          type: string
+          example: "Сумма < 3000 ₽: автоматическое решение в пользу клиента"
+
+    ConflictErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "DISPUTE_ALREADY_EXISTS"
+        message:
+          type: string
+          example: "Диспут по этой транзакции уже создан."
+        existingDisputeId:
+          type: string
+          example: "disp_1112223334445556"
+        currentStatus:
+          type: string
+          example: PENDING
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "AMOUNT_EXCEEDS_AUTO_DECISION_LIMIT"
+        message:
+          type: string
+          example: "Сумма оспаривания превышает лимит автоматического решения. Требуется ручная обработка."
+        limit:
+          type: number
+          format: double
+          example: 3000.00
+        providedAmount:
+          type: number
+          format: double
+          example: 5500.00
